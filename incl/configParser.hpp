@@ -8,7 +8,7 @@
 #include <exception>
 #include <stdexcept>
 #include <iostream>
-#include "../webserv.hpp"
+#include "webserv.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 

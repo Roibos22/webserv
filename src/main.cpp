@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
+/*   By: lgrimmei <lgrimmei@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:26:56 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/12 01:47:49 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/18 15:54:15 by lgrimmei         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,19 +18,20 @@
 #include <set>
 #include <ctime>
 #include <cstddef>
-#include "./Config/configParser.hpp"
-#include "./Config/Utils.hpp"
+#include "configParser.hpp"
+#include "Utils.hpp"
 
 Utils ut3;
 
 using std::cout;
 using std::endl;
 
-int g_exit = 0;
+int g_logger = 1; // logging: 1 = on, -1 = off
 
 void sigint_handler(int signum) {
 	(void)signum;
-	g_exit = 1;
+	std::cout << "\nSIGINT received. Shutting down server..." << std::endl;
+	g_logger = 0;
 }
 
 void handleCunkedRequest(HTTPRequest *request, int fd) {
@@ -61,7 +62,7 @@ int handleTimeout(int fd, std::time_t last_time, std::set<int> *active_fds) {
 		last_time_= now;
 	else
 		last_time_ = last_time;
-	if (now - last_time_ > 10 && active_fds->count(fd)) {
+	if (now - last_time_ > 60 && active_fds->count(fd)) { // 10 seconds timeout --> nginx default is 60 seconds
 		return (1);
 	}
 	return (0);
@@ -69,27 +70,34 @@ int handleTimeout(int fd, std::time_t last_time, std::set<int> *active_fds) {
 
 int main(int ac, char **av, char **env)
 {
+	if (g_logger != 1 && g_logger != -1) {
+		std::cerr << "Error! g_logger value should be either 1 or -1" << std::endl;
+		return (1);
+	}
 	signal(SIGINT, &sigint_handler);
 	std::vector<ServerConfig> servers;
 	std::vector<Connection> connections;
 	std::set<int> active_fds;
 	std::set<int> usedPorts;
 	std::map<int, std::time_t> last_data_time;
+	std::string file;
 	try {
 		if(ac < 2)
-			std::cerr << "You need to pass the config file as an argument\n";
+			file = "./ConfigFiles/ar1.conf";
 		else if(ac > 2)
+		{
 			std::cerr << "Too many arguments god damn it !\nWe only want one config file as argument..\n";
-		if(ac < 2 || ac > 2)
-			return (1);
-		std::string file = av[1];
+			return (0);
+		}
+		else
+			file = av[1];
 		configParser conf(file, env);
 		//conf.outputParse();
 		servers = ut3.convListToVector(conf.getServerList());
 		errorMapInit(servers);
 		for (size_t i = 0; i < servers.size(); i++) {
 			if (usedPorts.count(servers[i].port)) {
-				std::cout << "port " << servers[i].port << " is already in use" << std::endl;
+				std::cout << "--> Port " << servers[i].port << " is already in use. More servers will listen on the same port <--" << std::endl;
 				continue ;
 			}
 			Connection connection(servers[i].port, 100);
@@ -100,10 +108,13 @@ int main(int ac, char **av, char **env)
 		}
 	} catch (const std::exception &e) {
 		std::cerr << e.what() << std::endl;
+		std::cerr << "Error in config file. Server failed to start" << std::endl;
 		return (1);
 	}
 	
 	std::cout << "Server started" << std::endl;
+	if (g_logger == 1)
+		logger  ("Log Color Guide: ", "legend");
 	
 	int nfds = 1, new_fd;
 	for (size_t i = 0; i < connections.size(); i++) {
@@ -116,12 +127,12 @@ int main(int ac, char **av, char **env)
 		for (size_t i = 0; i < connections.size(); i++) {
 			int n = poll(connections[i].fds, nfds, 10);
 			if (n == -1) {
-				perror("poll error");
+				//perror("poll");
 				continue ;
 			}
 			for (int j = 0; j < nfds; j++) {
 				if (handleTimeout(connections[i].fds[j].fd, last_data_time[connections[i].fds[j].fd], &active_fds)){
-					//std::cout << "Timeout" << std::endl;
+					logger("Timeout", "error");
 					send (connections[i].fds[j].fd, "HTTP/1.1 408 Request Timeout\r\n\r\n", 30, 0);
 					if (close(connections[i].fds[j].fd) == -1) {
 						perror("#1 close error");
@@ -157,21 +168,17 @@ int main(int ac, char **av, char **env)
 					int total_len = 0;
 					if (active_fds.count(connections[i].fds[j].fd)) {
 						while ((len = recv(connections[i].fds[j].fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
-							buffer[len] = '\0';
-							buff_str += buffer;
+							buff_str.append(buffer, buffer + len);
 							total_len += len;
 							last_data_time[connections[i].fds[j].fd] = std::time(0);
 						}
 					}
 					if (!buff_str.empty()) {
 						std::string buffer_str = buff_str;
-						buffer_str[total_len] = '\0';
 						HTTPRequest *request = new HTTPRequest(connections[i].port);
 						request->parseRequest(buffer_str);
 						request->parseURI();
-						//std::cout << "-------------------------------------------" << std::endl;
-						//std::cout << "NEW REQUEST: " << request->method << " " << request->uri << std::endl;
-						//std::cout << "-------------------------------------------" << std::endl;
+						logger("NEW REQUEST: " + methodToString(request->method) + " " + request->uri + " " + request->version, "request");
 						if (request->headers["Transfer-Encoding"] == "chunked") {
 							handleCunkedRequest(request, connections[i].fds[j].fd);
 						}
@@ -191,13 +198,14 @@ int main(int ac, char **av, char **env)
 							connections[i].fds[k] = connections[i].fds[k + 1];
 						}
 						nfds--;
+						logger("Connection closed", "info");
 					} else if (len == -1) {
 						continue ;
 					}
 				}
 			}
 		}
-		if (g_exit) {
+		if (g_logger == 0) {
 			break ;
 		}
 	}

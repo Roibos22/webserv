@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   response_util.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lgrimmei <lgrimmei@student.42berlin.de>    +#+  +:+       +#+        */
+/*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:27:22 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/12 21:34:17 by lgrimmei         ###   ########.fr       */
+/*   Updated: 2024/04/15 21:06:07 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "response.hpp"
 #include "webserv.hpp"
+
+extern int g_logger;
 
 std::string contentTypeFinder(std::string path) { 
 	std::string extension = path.substr(path.find_last_of(".") + 1);
@@ -123,7 +125,7 @@ int findPort(std::string host) {
 
 int Response::errorCheck(LocationConfig location) 
 {
-	bool methodAllowed = false;
+	(void)location;
 	if (badRequest == 1)
 	{
 		status_code = 400;
@@ -136,20 +138,14 @@ int Response::errorCheck(LocationConfig location)
 		reason_phrase = "HTTP Version Not Supported";
 		return 1;
 	}
-	for (std::vector<std::string>::iterator method_it = location.methods.begin(); method_it != location.methods.end();  ++method_it)
+	if (continue_100 == "100-continue")
 	{
-		std::cout << methodToString(method) << "vs" << *method_it << std::endl;
-		if (*method_it == methodToString(method)) {
-			//std::cout << "method allowed: " << *method_it << std::endl;
-			methodAllowed = true;
-			break;
-		}
-	}
-	if (!methodAllowed) {
-		status_code = 405;
-		reason_phrase = "Method Not Allowed";
-		//header.push_back("Content-Length: 0");
-		return 1;
+		status_code = 417;
+		reason_phrase = "Expectation Failed";
+		//header.push_back("Connection: close");
+		header.push_back("Server: webserv");
+		skipBody = 1;
+		return 2;
 	}
 	if (method == POST && requestBodySize > maxBodySize)
 	{
@@ -174,12 +170,19 @@ std::string whiteSpaceTrim(std::string &str) {
 std::string Response::indexFinder(std::string uri, LocationConfig &location) {
 	for (std::vector<std::string>::iterator index = location.index.begin(); index != location.index.end(); ++index) {
 		if (isFile("." + root + uri + "/" + *index)) {
-			return *index;
+			if (uri == "/")
+				return *index;
+			else
+				return "/" + *index;
 		}
 	}
 	for (std::vector<std::string>::iterator index = serverIndex.begin(); index != serverIndex.end(); ++index) {
 		if (isFile("." + root + uri + "/" + *index)) {
-			return *index;
+			//return *index;
+			if (uri == "/")
+				return *index;
+			else
+				return "/" + *index;
 		}
 	}
 	return "";
@@ -205,13 +208,14 @@ int isEndingWithExtension(std::string uri, std::string extension) {
 }
 
 void Response::findFileUtil(std::string uri, LocationConfig &location) {
-	if (root != "" && location.root != "" && root != location.root) {
+	/* if (root != "" && location.root != "" && root != location.root) {
 		root = location.root;
 	} else if (root == "" && location.root != "") {
 		root = location.root;
-	}
+	} */
+	int allowedMethod = getIsValidMethod(uri);
 	std::string index = indexFinder(uri, location);
-	if (isFile("." + root + "/" + uri)) {
+	if (isFile("." + root + "/" + uri) && allowedMethod == 0) {
 		if (location.cgiParam["CGI_EXTENSION"] != "" && isEndingWithExtension(uri, trimSmeicolon(location.cgiParam["CGI_EXTENSION"])) == 1) {
 			path = "." + root + uri;
 			skipBody = 1;
@@ -220,26 +224,85 @@ void Response::findFileUtil(std::string uri, LocationConfig &location) {
 		}
 		else {
 			path = "." + root + uri;
+			logger("File found: " + path, "info");
 		}
-	} else if (isFile("." + root + uri + "/" + index)) {
-		path = "." + root + uri + "/" + index;
-	} else if (!isFile("." + root + uri + "/" + index) && isDirectory("." + root + "/" + uri) && (location.autoindex == true || serverAutoindex == true)) {
+	} else if (isFile("." + root + uri + "/" + index) && allowedMethod == 0) {
+		path = "." + root + uri + index;
+		logger("Index File found: " + index, "info");
+	} else if (!isFile("." + root + uri + "/" + index) && isDirectory("." + root + "/" + uri) && (location.autoindex == true || serverAutoindex == true) && allowedMethod == 0) {
 		skipBody = 1;
 		path = "." + root + uri;
 		directoryListing();
-	} else if (!isFile("." + root + uri + "/" + index) && isDirectory("." + root + "/" + uri) && location.autoindex == false && serverAutoindex == false) {
+	} else if (!isFile("." + root + uri + "/" + index) && isDirectory("." + root + "/" + uri) && location.autoindex == false && serverAutoindex == false && allowedMethod == 0) {
 		status_code = 403;
 		reason_phrase = "Forbidden";
+		return ;
+	} else if (allowedMethod == 1) {
+		status_code = 405;
+		reason_phrase = "Method Not Allowed";
+		skipBody = 0;
 		return ;
 	} else {
 		status_code = 404;
 		reason_phrase = "Not Found";
 		return ;
 	}
+	
 	status_code = 200;
 	reason_phrase = "OK";
 	content_type = contentTypeFinder(path);
 	header.push_back("Content-Type: " + content_type);
 	header.push_back("Connection: close");
 	header.push_back("Server: webserv");
+}
+
+
+int Response::getIsValidMethod(std::string uri) {
+	(void)uri;
+	for (std::vector<std::string>::iterator method_it = location.methods.begin(); method_it != location.methods.end(); ++method_it) {
+		if (*method_it == methodToString(method)) {
+			break ;
+		}
+		else if (method_it == location.methods.end() - 1) {
+			return 1;
+		}
+	}
+	return 0;
+}
+int Response::isValidMethod(std::string uri) {
+	(void)uri;
+	for (std::vector<std::string>::iterator method_it = location.methods.begin(); method_it != location.methods.end(); ++method_it) {
+		if (*method_it == methodToString(method)) {
+			break ;
+		}
+		else if (method_it == location.methods.end() - 1) {
+			if (status_code != 404) {
+				status_code = 405;
+				reason_phrase = "Method Not Allowed";
+				skipBody = 0;
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void logger(std::string log, std::string type) {
+	#define RED "\033[1;31m"
+	#define GREEN "\033[1;32m"
+	#define YELLOW "\033[1;33m"
+	#define BLUE "\033[1;34m"
+
+	if (g_logger != 1)
+		return ;
+	if (type == "request")
+		std::cout << BLUE << log << "\033[0m" << std::endl;
+	else if (type == "response")
+		std::cout << GREEN << log << "\033[0m" << std::endl;
+	else if (type == "error")
+		std::cout << RED << log << "\033[0m" << std::endl;
+	else if (type == "info")
+		std::cout << YELLOW << log << "\033[0m" << std::endl;
+	else if (type == "legend")
+		std::cout << log << RED << "error " << GREEN << "response " << YELLOW << "info " << BLUE << "request" << "\033[0m" << std::endl << std::endl;
 }

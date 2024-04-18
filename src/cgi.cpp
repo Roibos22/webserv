@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/06 22:36:36 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/12 01:22:21 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/13 15:51:06 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,6 +144,7 @@ void Response::runCgi(std::string uri) {
 		env[i] = const_cast<char*>(envVars[i].c_str());
 	}
 	//std::cout << "queryStr: " << queryStr << std::endl;
+	logger("Running CGI with Query string: " + queryStr + " and/or Request Body: " + requestBody, "info");
 	env[envVars.size()] = NULL;
 	const char* args[] = {envMap["PATH_INFO"].c_str(), path.c_str(), NULL}; 
 	int pipefd[2];
@@ -179,9 +180,11 @@ void Response::runCgi(std::string uri) {
 			kill(pid, SIGKILL);
 		}
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0){
-			std::cout << "child exited with status " << WEXITSTATUS(status) << std::endl;
+			//std::cout << "child exited with status " << WEXITSTATUS(status) << std::endl;
+			logger("CGI ran successfully", "info");
 		} else {
-			std::cout << "child failed" << std::endl;
+			//std::cout << "child failed" << std::endl;
+			logger("CGI failed", "error");
 			http_version = "HTTP/1.1";
 			status_code = 500;
 			reason_phrase = "Internal Server Error";

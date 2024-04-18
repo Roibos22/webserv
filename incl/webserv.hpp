@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:28:31 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/11 19:42:22 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/15 13:12:55 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 
 #define MAX_CLIENTS 10000
+#define SERVER_ERROR "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 144\r\n\r\n<!DOCTYPE html><html><head><title>ERROR 500</title><meta charset=utf-8><meta http-equiv=X-UA-Compatible content=IE=edge><meta name=viewport content=width=device-width, initial-scale=1><h1>500</h1><h2>Internal server error</h2><p>Sorry, there was an error in processing your request.</p></html>"
+
 
 struct returnStatus
 {
@@ -100,5 +102,6 @@ bool separateKeyValue(const std::string& line, std::string& key, std::string& va
 void printConfig(const std::vector<ServerConfig>& servers);
 void initconfig(std::vector<ServerConfig>&config);
 void errorMapInit(std::vector<ServerConfig> &server);
+void logger(std::string log, std::string type);
 
 #endif

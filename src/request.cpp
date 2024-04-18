@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:27:07 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/09 12:53:39 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/15 17:45:16 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ HTTPRequest::HTTPRequest(int _port) {
 }
 
 void HTTPRequest::parseRequest(std::string request) {
+	//std::cout << "Request: " << request << std::endl;
 	std::string line;
 	std::istringstream requestStream(request);
 	std::getline(requestStream, line);
@@ -66,6 +67,8 @@ void HTTPRequest::parseRequest(std::string request) {
 		std::istringstream lineStream(line);
 		std::getline(lineStream, key, ':');
 		std::getline(lineStream, value);
+		key = Trimmer(key);
+		value = Trimmer(value);
 		if (line.find(":") != std::string::npos && (key.empty() || value.empty())){
 			badRequest = 1;
 			//throw std::invalid_argument("bad request");
@@ -77,6 +80,12 @@ void HTTPRequest::parseRequest(std::string request) {
 		if (contentLength != "") {
 			int length = atoi(contentLength.c_str());
 			char* body = new char[length];
+			if(requestStream.fail())
+			{
+				badRequest = 1;
+				//throw std::invalid_argument("bad request");
+				return ;
+			}
 			requestStream.read(body, length);
 			this->body = std::string(body, length);
 			delete[] body;
@@ -115,6 +124,16 @@ std::string HTTPRequest::getHeader(std::string key) {
 		return it->second;
 	}
 	return "";
+}
+
+std::string Trimmer(std::string &str) {
+	size_t start = str.find_first_not_of(" \t \n \r \f \v");
+	size_t end = str.find_last_not_of(" \t \n \r \f \v");
+	if (start == std::string::npos || end == std::string::npos) {
+		return "";
+	}
+	std::string str_ = str.substr(start, end - start + 1);
+	return str_;
 }
 
 void HTTPRequest::printRequest() {

@@ -37,7 +37,7 @@ try:
         <i class="fas fa-times"></i></button>
         {escaped_filename}
         """)
-        print("appended file", file=sys.stderr)
+        #print("appended file", file=sys.stderr)
 
 except Exception as e:
     print(f"<p>Error: {e}</p>")

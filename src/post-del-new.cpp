@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/05 16:45:48 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/11 20:47:23 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/15 17:48:38 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,70 +46,65 @@ void parseContentDisposition(const std::string& line, FormData& formData) {
 	}
 }
 
-// Main function to parse multipart/form-data content
 FormData Response::parseFormData(const std::string& requestBody, const std::string& boundary) {
-	FormData formData;
+    FormData formData;
 
-	// Boundary strings
-	std::string delimiter = "--" + boundary;
-	std::string endDelimiter = "--" + boundary + "--";
-	
-	// Find start of the first part
-	size_t startPos = requestBody.find(delimiter);
-	if (startPos == std::string::npos)
-	{
-		//std::cout << "No boundary found" << std::endl;
-		return (formData);
-	}
-	startPos += delimiter.length();
-	
-	// Find the header section of the part
-	size_t headerEndPos = requestBody.find("\r\n\r\n", startPos);
-	if (headerEndPos == std::string::npos) {
-		std::cout << "No headers found" << std::endl;
-		return formData; // No headers end found
-	}
+    std::string delimiter = "--" + boundary;
+    std::string endDelimiter = delimiter + "--";
 
-	std::string headers = requestBody.substr(startPos, headerEndPos - startPos);
-	std::string remaining = requestBody.substr(headerEndPos);
+    size_t startPos = 0;
+    size_t endPos = 0;
 
-	// Find each header line
-	size_t pos = 0;
-	while ((pos = headers.find("\r\n")) != std::string::npos) {
-		std::string headerLine = headers.substr(0, pos);
-		headers.erase(0, pos + 2); // +2 to skip the CR LF characters
+    while ((startPos = requestBody.find(delimiter, startPos)) != std::string::npos) {
+        startPos += delimiter.length();
+        endPos = requestBody.find(delimiter, startPos);
+        if (endPos == std::string::npos) {
+            endPos = requestBody.length();
+        }
 
-		if (headerLine.find("Content-Disposition:") != std::string::npos) {
-			parseContentDisposition(headerLine, formData);
-		} else if (headerLine.find("Content-Type:") != std::string::npos) {
-			size_t typePos = headerLine.find(": ");
-			if (typePos != std::string::npos) {
-				typePos += 2; // Skip past ': '
-				formData.contentType = trim(headerLine.substr(typePos));
-			}
-		}
-	}
+        std::string part = requestBody.substr(startPos, endPos - startPos);
 
-	// Find the start of the content
-	startPos = headerEndPos + 4; // +4 to skip the CR LF characters after headers
+        parsePartData(part, formData);
+        startPos = endPos;
+    }
 
-	// Find the end of the content
-	size_t contentEndPos = requestBody.find("\r\n" + endDelimiter, startPos - 4);
-	if (contentEndPos == std::string::npos) {
-		// If the end delimiter is not found, the content goes to the end of the requestBody
-		contentEndPos = requestBody.length();
-	}
+    return formData;
+}
 
-	formData.content = requestBody.substr(startPos, contentEndPos - endDelimiter.length() - startPos - 4);
-	formData.content = trim(formData.content); // Trim the content
+void parsePartData(const std::string& part, FormData& formData) {
+    size_t headerEndPos = part.find("\r\n\r\n");
+    if (headerEndPos == std::string::npos) {
+        return;
+    }
 
-	return formData;
+    std::string headers = part.substr(0, headerEndPos);
+    std::string content = part.substr(headerEndPos + 4);
+
+    parseHeaders(headers, formData);
+    formData.content = trim(content);
+}
+
+void parseHeaders(const std::string& headers, FormData& formData) {
+    std::istringstream iss(headers);
+    std::string line;
+
+    while (std::getline(iss, line)) {
+        if (line.find("Content-Disposition:") != std::string::npos) {
+            parseContentDisposition(line, formData);
+        } else if (line.find("Content-Type:") != std::string::npos) {
+            size_t typePos = line.find(": ");
+            if (typePos != std::string::npos) {
+                typePos += 2; // Skip past ': '
+                formData.contentType = trim(line.substr(typePos));
+            }
+        }
+    }
 }
 
 std::string Response::getBoundary(const std::string& contentType) {
 	std::string boundaryPrefix = "boundary=";
 	size_t boundaryPos = contentType.find(boundaryPrefix);
-	
+
 	if (boundaryPos == std::string::npos) {
 		return "";
 	}
@@ -138,30 +133,31 @@ void Response::handleUploadFile( void )
 	if (directory == "./test_websites/website/upload/")
 		uploadDir = "." + root + location.path + "/" + "tmp/" + filename;
 	std::string filepath = directory + filename;
-	//std::cout << filepath << std::endl;
-	std::ofstream file(uploadDir.c_str());
+	//std::cout << "file_path: " << filepath << std::endl;
+	std::ofstream file(uploadDir.c_str(), std::ios::binary);
 
 	if (file.is_open()) {
-		file << content;
+		//file << content;
+		file.write(content.c_str(), content.length());
 		file.close();
 		//std::cout << "File written successfully" << std::endl;
+		logger("File written successfully", "info");
 	} else {
 		//std::cerr << "Unable to open file for writing" << std::endl;
+		logger("Unable to open file for writing", "error");
 		status_code = 500;
 		reason_phrase = "Internal Server Error";
 		return ;
 	}
-	// QUESTION: Just sending back the same file again is fine?
-	//path = "./test_websites/website/upload/upload.html";
+	path = "./test_websites/website/upload/upload.html";
 	if (refer != "" && refer.find("upload") != std::string::npos)
 		path = "./test_websites/website/upload/upload.html";
 	else
 		path = "./test_websites/default_error_pages/upload.html";
 	status_code = 201;
 	reason_phrase = "Created";
-	//header.push_back("Content-Type: " + content_type);
 	header.push_back("Content-Type: text/html");
-	//header.push_back("Connection: keep-alive");
+	header.push_back("Connection: closed");
 	header.push_back("Server: webserv");
 
 }
@@ -205,21 +201,23 @@ std::string sumVars(const std::string& queryString)
 }
 
 
-void Response::handleQueries( void )
-{
-	//std::cout << "Handling Query POST" << std::endl << queryStr << std::endl;
-	// sum queries
-	body.push_back("<h3>Result: " + sumVars(queryStr) + "</h3>");
-	//body.push_back("<text>" +  + "</text>");
-
+void Response::handleQueries( void ) {
 	content_type = "text/html";
-	path = queryStr;
-	skipBody = 1;
 	status_code = 200;
 	reason_phrase = "OK";
 	header.push_back("Content-Type: text/html");
-	header.push_back("Connection: keep-alive");
+	header.push_back("Connection: closed");
 	header.push_back("Server: webserv");
+	body.push_back("<html><body>");
+	body.push_back("<p>Query String: " + queryStr + " Received" + "</p>");
+	while (queryStr.find("&") != std::string::npos) {
+		size_t pos = queryStr.find("&");
+		body.push_back("<p>" + queryStr.substr(0, pos) + "</p>");
+		queryStr = queryStr.substr(pos + 1);
+	}
+	body.push_back("<p>" + queryStr + "</p>");
+	body.push_back("</body></html>");
+	
 }
 
 void Response::handleUndefinedPost( void )
@@ -227,14 +225,19 @@ void Response::handleUndefinedPost( void )
 	//std::cout << "Handling Undefined POST" << std::endl;
 	status_code = 200;
 	reason_phrase = "OK";
+	header.push_back("Connection: closed");
+	header.push_back("Server: webserv");
 	skipBody = 1;
 }
 
-void Response::handlePost(std::string uri, std::vector<ServerConfig>::iterator server)
-{	
-	//std::cout << "- handlePost startd" << std::endl;
+void Response::handlePost(std::string uri, std::vector<ServerConfig>::iterator server) {	
 	(void)server;
-	//std::cout << "QUERY STRING:" << this->queryStr << std::endl;
+	if (root != "" && location.root != "" && root != location.root) {
+		root = location.root;
+	} else if (root == "" && location.root != "") {
+		root = location.root;
+	}
+	
 	if (isFile("." + root + uri)) {
 		if (location.cgiParam["CGI_EXTENSION"] != "" && isEndingWithExtension(uri, trimSmeicolon(location.cgiParam["CGI_EXTENSION"])) == 1) {
 			path = "." + root + uri;
@@ -248,13 +251,18 @@ void Response::handlePost(std::string uri, std::vector<ServerConfig>::iterator s
 			return ;
 		}
 	}
-	if (content_type.find("multipart/form-data") != std::string::npos) {
+	if (isDirectory("." + root + uri) && content_type.find("multipart/form-data") != std::string::npos && !isValidMethod(uri)) {
 		handleUploadFile();
 	}
-	else if (!this->queryStr.empty())
+	else if (isDirectory("." + root + uri) && !this->queryStr.empty()) {
 		handleQueries();
-	else
+	}
+	else if (isDirectory("." + root + uri)) {
 		handleUndefinedPost();
+	} else {
+		status_code = 404;
+		reason_phrase = "Not Found";
+	}
 }
 
 bool fileExists(const std::string& relativePath) {
@@ -264,11 +272,9 @@ bool fileExists(const std::string& relativePath) {
 	return exists;
 }
 
-void Response::deleteFileFromTmpFolder(std::string filename)
-{
-	//std::cout << filename << std::endl;
+void Response::deleteFileFromTmpFolder(std::string filename) {
 	std::string fullPath = "." + filename;
-
+	logger("Deleting file '" + filename + "'" + " from: " + full_path , "info");
 	if (filename.find("/test_websites/website/upload/tmp/") != 0)
 	{
 		status_code = 401;
@@ -284,7 +290,8 @@ void Response::deleteFileFromTmpFolder(std::string filename)
 	else
 	{
 		if (remove(fullPath.c_str()) == 0) { 
-			std::cout << "File '" << filename << "' deleted successfully." << std::endl;
+			//std::cout << "File '" << filename << "' deleted successfully." << std::endl;
+			logger("File '" + filename + "' deleted successfully.", "info");
 			status_code = 204;
 			reason_phrase = "No Content";
 			skipBody = 1;
@@ -296,25 +303,37 @@ void Response::deleteFileFromTmpFolder(std::string filename)
 	header.push_back("Server: webserv");
 }
 
-void Response::handleDelete(std::string uri, std::vector<ServerConfig>::iterator server)
-{	
+void Response::handleDelete(std::string uri, std::vector<ServerConfig>::iterator server) {	
 	(void)server;
 	(void)uri;
+
 	std::string fullPath = "." + root + uri;
+	if (!isFile(fullPath)) {
+		status_code = 404;
+		reason_phrase = "Not Found";
+		return ;
+	}
+	for (std::vector<std::string>::iterator method_it = location.methods.begin(); method_it != location.methods.end(); ++method_it) {
+		if (*method_it == methodToString(method)) {
+			break ;
+		}
+		else if (method_it == location.methods.end() - 1){
+			status_code = 405;
+			reason_phrase = "Method Not Allowed";
+			return ;
+		}
+	}
+	
 	if (uri.find("/test_websites/website/upload/tmp/") != std::string::npos)
 	{
 		deleteFileFromTmpFolder(uri);
 		return ;
 	}
-	if (!isFile(fullPath)) {
-		status_code = 404;
-		reason_phrase = "Not Found";
-		//header.push_back("Content-Length: 0");
-		return ;
-	}
 	if (remove(fullPath.c_str()) == 0) {
 		status_code = 204;
 		reason_phrase = "No Content";
+		header.push_back("Server: webserv");
+		header.push_back("Connection: closed");
 		skipBody = 1;
 	} else {
 		status_code = 500;

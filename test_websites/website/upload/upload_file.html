@@ -21,7 +21,7 @@
 	<button type="button" class="button" onclick="submitForm()">Upload</button>
 </form>
 
-<h3>Uploaded Files:</h3>
+<h3>Uploaded Files</h3>
 <div id="fileList">
 	<!-- The file list will be populated here -->
 </div>
@@ -47,9 +47,10 @@
 
 	function fileDeleteButtonPressed(filename) {
 		var	xhr = new XMLHttpRequest();
-		var	payload = 'filename=' + filename;
-		console.log(filename);
-		xhr.open('DELETE', filename, true);
+		var modifiedName = filename.replace('/test_websites/website', '');
+		var	payload = 'filename=' + modifiedName;
+		console.log(modifiedName);
+		xhr.open('DELETE', modifiedName, true);
 		xhr.onload = function() {
 			if (xhr.status >= 200 && xhr.status < 300)
 				console.log('File deleted!\n', xhr.responseText);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lgrimmei <lgrimmei@student.42berlin.de>    +#+  +:+       +#+        */
+/*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:27:14 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/03 16:27:32 by lgrimmei         ###   ########.fr       */
+/*   Updated: 2024/04/15 13:33:04 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class HTTPRequest
 		void parseURI(void);
 		void printRequest();
 };
-
+std::string Trimmer(std::string &str);
 #endif
 
 // GET / HTTP/1.1

@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:27:38 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/10 16:41:15 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/15 17:07:08 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ public:
 	int							port;
 	bool						serverAutoindex;
 	LocationConfig 				location;
+	std::string 				continue_100;
 	std::string 				full_path;
 	std::string 				url;
 	std::string 				queryStr;
@@ -100,6 +101,9 @@ public:
 	std::string parseContentDispos(void);
 	void handleDownload(void);
 	void	runCgi_internal(std::string uri);
+	int	isValidMethod(std::string uri);
+	int getIsValidMethod(std::string uri);
+	
 
 };
 
@@ -112,6 +116,8 @@ int findPort(std::string host);
 std::string whiteSpaceTrim(std::string &str);
 int isEndingWithExtension(std::string uri, std::string extension);
 std::string trimSmeicolon(std::string &str);
+void parsePartData(const std::string& part, FormData& formData);
+void parseHeaders(const std::string& headers, FormData& formData);
 template <typename T>
 std::string toString(const T& value) {
     std::ostringstream oss;

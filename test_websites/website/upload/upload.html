@@ -54,7 +54,7 @@
 			if (xhr.status >= 200 && xhr.status < 300)
 				console.log('File deleted!\n', xhr.responseText);
 			else
-				console.error('File could not be deleted!\n', file);
+				console.error('File could not be deleted!\n');
 			updateFileList();
 		}
 		xhr.send(payload);

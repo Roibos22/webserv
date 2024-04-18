@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lgrimmei <lgrimmei@student.42berlin.de>    +#+  +:+       +#+        */
+/*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/19 01:27:30 by ashojach          #+#    #+#             */
-/*   Updated: 2024/04/12 21:58:19 by lgrimmei         ###   ########.fr       */
+/*   Updated: 2024/04/15 21:06:42 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <string>
 
 Response::Response(HTTPRequest &request) {
+	
 	port = request.port;
 	status_code = 0;
 	reason_phrase = "";
@@ -42,7 +43,14 @@ Response::Response(HTTPRequest &request) {
 		requestBodySize = std::atoi(temp.c_str());
 	else
 		requestBodySize = 0;
+	if (request.getHeader("Expect") == "100-continue") {
+		continue_100 = "100-continue";
+		return ;
+	}
+	else
+		continue_100 = "";
 	requestBody = request.body;
+	//std::cout << "Request Body:\n " << requestBody << std::endl;
 	contentDisposition = request.getHeader("Content-Disposition");
 	boundary = getBoundary(request.getHeader("Content-Type"));
 	formData = parseFormData(request.body, boundary);
@@ -54,20 +62,16 @@ Response::~Response() {
 void Response::distributer(std::vector<ServerConfig> &servers, std::string uri) {
 	std::vector<ServerConfig>::iterator server = findServer(servers);
 	location = findLocation(uri, server);
-	std::cout << uri << std::endl;
-	std::cout << location.path << std::endl;
-	if (errorCheck(location) == 1) {
-		std::cout << "Request Error detected!" << std::endl;
-		std::cout << reason_phrase << std::endl;
-		//NULL;
+	if (errorCheck(location) == 1 || errorCheck(location) == 2) {
+		if (errorCheck(location) == 1)
+			logger("Request error", "error");
+		NULL;
 	}
-	// else if (uri == "/internal-cgi/get_name.py" || uri == "/internal-cgi/save_name.py") {
-	// 	runCgi_internal(uri);
-	// }
 	else if (method == GET) {
 		findFile(uri, server);
 	} else if (method == POST) {
 		handlePost(uri, server);
+		isValidMethod(uri);
 	} else if (method == DELETE) {
 		handleDelete(uri, server);
 	} else {
@@ -78,6 +82,7 @@ void Response::distributer(std::vector<ServerConfig> &servers, std::string uri) 
 }
 
 void Response::directoryListing(void) {
+	logger("Creating Directory Listing of " + path , "info");
 	body.push_back("<!DOCTYPE html><html><body>");
 	body.push_back("<h1>Directory listing</h1>");
 	body.push_back("<h2>Index of " + path + "</h2>");
@@ -117,6 +122,7 @@ std::vector<ServerConfig>::iterator	Response::findServer(std::vector<ServerConfi
 				if (server->autoindex == true) {
 					serverAutoindex = true;
 				}
+				logger ("Server: [" + *serverName + "] found on port: " + toString(server->port), "info");
 				return (server);
 			}
 		}
@@ -128,6 +134,7 @@ std::vector<ServerConfig>::iterator	Response::findServer(std::vector<ServerConfi
 	if (returnServer->autoindex == true) {
 		serverAutoindex = true;
 	}
+	logger ("Default server found on port: " + toString(returnServer->port), "info");
 	return (returnServer);
 }
 
@@ -149,34 +156,27 @@ LocationConfig Response::findLocation(std::string uri, std::vector<ServerConfig>
 
 void Response::findFile(std::string uri, std::vector<ServerConfig>::iterator server) {
 	LocationConfig location = findLocation(uri, server);
-
-	for (std::vector<std::string>::iterator method_it = location.methods.begin(); method_it != location.methods.end(); ++method_it) {
-		if (*method_it == methodToString(method)) {
-			break ;
-		}
-		else if (method_it == location.methods.end() - 1){
-			status_code = 405;
-			reason_phrase = "Method Not Allowed";
-			header.push_back("Content-Length: 0");
-			return ;
-		}
+	if (root != "" && location.root != "" && root != location.root) {
+		root = location.root;
+	} else if (root == "" && location.root != "") {
+		root = location.root;
 	}
-	if (location.statusRedir.redirection != "") {
-		//std::cout << "redirection: " << location.statusRedir.redirection << std::endl;
-		//status_code = 301;
+	logger("Root: " + root, "info");
+	findFileUtil(uri, location);
+	if (location.statusRedir.redirection != "" && status_code == 404 && isValidMethod(uri) == 0) {
+		logger("Redirecting to: " + location.statusRedir.redirection, "info");
 		status_code = location.statusRedir.status_code;
 		reason_phrase = "Moved Permanently";
 		http_version = "HTTP/1.1";			
 		header.push_back("Location: " + location.statusRedir.redirection);
-		//header.push_back("Content-Length: 0");
 		return ;
 	}
-	findFileUtil(uri, location);
 }
 
 void Response::createBody(void) {
 	//std::cout << "Creating Body " << status_code << std::endl;
-	if (status_code == 200 && skipBody == 0) {
+	if ((status_code == 200 || status_code == 201 || status_code == 204) && skipBody == 0) {
+		logger("Creating Page/File: " + path, "info");
 		std::ifstream file(path.c_str());
 		std::string line;
 		//std::cout << "File path: " << path.c_str() << std::endl;
@@ -188,6 +188,7 @@ void Response::createBody(void) {
 		}
 		else {
 			//std::cout << "Unable to open file" << std::endl;
+			logger("Unable to open boddy file: " + path , "error");
 			status_code = 500;
 			reason_phrase = "Internal Server Error 2";
 			return ;
@@ -209,6 +210,7 @@ void Response::createBodyError(void) {
 	std::ifstream file(errorPage.c_str());
 	std::string line;
 	//std::cout << "Error Page: " << errorPage << std::endl;
+	logger("Creating Error Page: " + errorPage, "info");
 	if (file.is_open()) {
 		while (getline(file, line)) {
 			body.push_back(line);
@@ -216,6 +218,7 @@ void Response::createBodyError(void) {
 		file.close();
 	}
 	else {
+		logger("Unable to open error page file: " + errorPage, "error");
 		status_code = 500;
 		reason_phrase = "Internal Server Error 1";;
 	}
@@ -233,6 +236,7 @@ void Response::createResponse(void) {
 	status_line += " ";
 	status_line += reason_phrase;
 	//std::cout << status_line << std::endl;
+	logger("RESPONSE: " + status_line, "response");
 }
 
 void Response::sendResponse(int client_fd) {
@@ -266,10 +270,12 @@ void Response::sendResponse(int client_fd) {
 		ssize_t sent = send(client_fd, response_string.c_str() + len, response_string.size() - len, 0);
 		if (sent == -1) {
 			send(client_fd, "HTTP/1.1 500 Internal Server Error\r\n\r\n", 30, 0);
-			break;
+			logger("Error sending response", "error");
+			return ;
 		}
 		len += sent; 
 	}
+	logger("Response sent", "info");
 	//std::cout << "response_string: " << response_string << std::endl;
 	
 }

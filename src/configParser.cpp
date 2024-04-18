@@ -6,14 +6,14 @@
 /*   By: lgrimmei <lgrimmei@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/04/12 18:29:39 by lgrimmei         ###   ########.fr       */
+/*   Updated: 2024/04/18 15:56:01 by lgrimmei         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 
 #include "configParser.hpp"
-#include "../response.hpp"
+#include "response.hpp"
 #include <string>
 
 using std::cerr;
@@ -94,6 +94,7 @@ void	configParser::addListenPort(std::string& s, ServerConfig *currentServer)
 {
 	std::stringstream	ss(s);
 	int	num;
+	int check = currentServer->port;
 
 	while(s.empty() == false && std::isspace(*s.begin()))
 		s.erase(s.begin());
@@ -106,6 +107,10 @@ void	configParser::addListenPort(std::string& s, ServerConfig *currentServer)
 	}
 	ss << s;
 	ss >> num;
+	if (num < 0 || num > 65535)
+		throw this->LineNotValid("Port number not valid: " + s);
+	if (check == num || check != -5)
+		throw this->LineNotValid("Port number found twice in one server block: " + s);
 	currentServer->port = num;
 }
 
@@ -525,6 +530,7 @@ ServerConfig	configParser::defaultServer(void)
 
 	def.clientMaxBodySize = 5 * 1024 * 1024;
 	def.autoindex = false;
+	def.port = -5;
 	return(def);
 };
 

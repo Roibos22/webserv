@@ -64,8 +64,9 @@
 
 #Mannschaft
 {
-	margin-left: 630px;
-	margin-right: 500px;
+	margin-left: 450px;
+	margin-right: 700px;
+	width: 20%;
 	display: inline-block;
 	justify-content: center;
 	color: rgb(236, 231, 231);

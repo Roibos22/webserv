@@ -6,7 +6,7 @@
 /*   By: ashojach <ashojach@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: Invalid date        by                   #+#    #+#             */
-/*   Updated: 2024/04/10 15:16:04 by ashojach         ###   ########.fr       */
+/*   Updated: 2024/04/15 13:41:38 by ashojach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,25 +23,22 @@ Connection::Connection(int port_, int back_log_): port(port_), backlog(back_log_
 void Connection::socket_setup(void) {
 	this->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->listen_fd == -1) {
-		//throw std::runtime_error("socket error\n");
 		perror("socket error");
-		//return;
+		throw std::runtime_error("");
 	}
 
 	int opt = 1;
 	if (setsockopt(this->listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-		//throw std::runtime_error("setsockopt error\n");
 		perror("setsockopt error");
-		//return ;
+		throw std::runtime_error("");
 	}
 	memset(&this->server_addr, 0, sizeof(server_addr));
 	this->server_addr.sin_family = AF_INET;
 	this->server_addr.sin_port = htons(port);
 	this->server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	if (bind(this->listen_fd, (struct sockaddr*)&this->server_addr, sizeof(this->server_addr)) == -1) {
-		//throw std::runtime_error("bind error\n");
 		perror("bind error");
-		//return;
+		throw std::runtime_error("");
 	}
 	listen(this->listen_fd, this->backlog);
 }

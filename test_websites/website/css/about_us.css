@@ -1,0 +1,47 @@
+#core
+{
+	margin-top: 150px;
+	margin-left: 18%;
+	width: 65%;
+}
+
+.team_description
+{
+	margin: auto;
+	margin-bottom: 330px;
+}
+
+#team
+{
+	margin: auto;
+	margin-left: 30%;
+	margin-bottom: 50px;
+	width: 500px;
+}
+
+.person_box
+{
+	margin-top: 50px;
+	margin-bottom: 50px;
+}
+
+#Leon
+{
+	margin: auto;
+	margin-left: 40%;
+	width: 300px;
+}
+
+#Henri
+{
+	margin: auto;
+	margin-left: 35%;
+	width: 450px;
+}
+
+#Arash
+{
+	margin: auto;
+	margin-left: 37%;
+	width: 380px;
+}
