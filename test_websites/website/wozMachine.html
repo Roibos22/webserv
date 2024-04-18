@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>The best website</title>
+	<link rel="stylesheet" href="../css/styles.css">
+	<link rel="stylesheet" href="../css/wozMachine.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<body>
+	<section class="header-section">
+		<div id="header-placeholder"></div>
+		<script>
+			$(function()
+			{
+				$.get("header.html", function(data)
+				{
+					$("#header-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+	<!---------------- CORE --------------->
+	<div id="action">
+		<h2 id="wozMachine">wozMachine</h2>
+		<button>choose file</button>
+		<button>upload</button>
+		<button>delete</button>
+	</div>
+	<section class="footer-section">
+		<div id="footer-placeholder"></div>
+		<script>
+			$(function()
+			{
+				$.get("footer.html", function(data)
+				{
+					$("#footer-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+</body>

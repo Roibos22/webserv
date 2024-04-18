@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Upload & Management</title>
+<style>
+	body { font-family: Arial, sans-serif; }
+	ul { list-style-type: none; padding: 0; }
+	li { margin-top: 5px; }
+	.button { margin-top: 10px; }
+	.delete-button { margin-left: 10px; }
+</style>
+
+</head>
+<body onLoad="updateFileList()">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+<h2>Upload File</h2>
+<form id="uploadForm" action="upload" method="post" enctype="multipart/form-data">
+	<input type="file" id="fileInput" name="filename">
+	<button type="button" class="button" onclick="submitForm()">Upload</button>
+</form>
+
+<h3>Uploaded Files:</h3>
+<div id="fileList">
+	<!-- The file list will be populated here -->
+</div>
+
+<script>
+
+	function submitForm() {
+		var	form = document.getElementById('uploadForm');
+		var	formData = new FormData(form);
+		var	xhr = new XMLHttpRequest();
+
+		xhr.open('POST', 'upload', true);
+		xhr.onload = function() {
+			if (xhr.status >= 200 && xhr.status < 300)
+				console.log('File uploaded!\n', xhr.responseText);
+			else
+				console.error('File could not be uploaded!\n');
+			updateFileList();
+		}
+		xhr.send(formData);
+		form.reset();
+	}
+
+	function fileDeleteButtonPressed(filename) {
+		var	xhr = new XMLHttpRequest();
+		var	payload = 'filename=' + filename;
+		console.log(filename);
+		xhr.open('DELETE', filename, true);
+		xhr.onload = function() {
+			if (xhr.status >= 200 && xhr.status < 300)
+				console.log('File deleted!\n', xhr.responseText);
+			else
+				console.error('File could not be deleted!\n');
+			updateFileList();
+		}
+		xhr.send(payload);
+	}
+
+	function updateFileList() {
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/internal-cgi/list_files.py', true);
+		xhr.onload = function () {
+			if (xhr.status >= 200 && xhr.status < 300)
+				document.getElementById('fileList').innerHTML = xhr.responseText;
+			else
+				document.getElementById('fileList').innerHTML = '<p>Error loading file list.</p>';
+		};
+		xhr.onerror = function () {
+			document.getElementById('fileList').innerHTML = '<p>Network error.</p>';
+		};
+		xhr.send();
+	}
+</script>
+</body>
+</html>

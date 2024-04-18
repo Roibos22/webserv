@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGI Tester</title>
+</head>
+<body>
+    <h1>CGI Tester</h1>
+    <p>Enter two numbers to add them together.</p>
+    <form action="/cgi-bin/ar.php" method="get">
+        <label for="num1">Number 1:</label><br>
+        <input type="number" id="num1" name="num1"><br>
+        <label for="num2">Number 2:</label><br>
+        <input type="number" id="num2" name="num2"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p>Enter a character and size to create an ASCII tree.</p>
+    <form action="/cgi-bin/tree.php" method="get">
+        <label for="char">Character:</label><br>
+        <input type="text" id="char" name="char" maxlength="1"><br>
+		<label for="size">size:</label><br>
+        <input type="number" id="size" name="size"><br>
+        <input type="submit" value="Submit">
+    </form>
+	<p>Enter a sentence to turn in to uppercase.</p>
+    <form action="/cgi-bin/test.php" method="post">
+        <label for="char">Character:</label><br>
+        <input type="text" id="char" name="char" maxlength="500" ><br>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+

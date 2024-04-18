@@ -1,0 +1,18 @@
+*
+{
+	margin: 0;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	/* background-color: rgb(247, 242, 242); */
+}
+
+.person
+{
+	margin-top: 20px;
+	font-size: 30px;
+}
+
+.scare
+{
+	height: 100%;
+	width: 100%;
+}

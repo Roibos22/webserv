@@ -1,0 +1,136 @@
+#Bob_text
+{
+	margin-top: 150px;
+	margin-left: 15%;
+	padding: 10px;
+	display: inline-block;
+	position: relative;
+}
+
+.Bob
+{
+	position: relative;
+	width: 350px;
+	z-index: 0;
+}
+
+.Bubble
+{
+	position: relative;
+	width: 380px;
+	margin-top: 20px;
+	margin-left: -65px;
+	z-index: 1;
+}
+
+#bubble_text
+{
+	position: relative;
+	margin-top: -310px;
+	margin-left: 310px;
+	z-index: 2;
+	font-size: 17px;
+}
+
+.Place
+{
+	display: flex;
+	position: relative;
+	margin: auto;
+	margin-bottom: 100px;
+	margin-left: 180px;
+}
+
+#hauntedPlace
+{
+	position: relative;
+	display: inline-block;
+	margin-top: 350px;
+	margin-left: 10%;
+	border-radius: 100px;
+}
+
+#Go_here_hp
+{
+	position: absolute;
+	z-index: 2;
+	bottom: 150px;
+	left: 400px;
+	text-decoration: none;
+	font-weight: bolder;
+	color: rgb(89, 187, 190);
+}
+
+#Go_here_sp
+{
+	position: relative;
+	z-index: 2;
+	text-decoration: none;
+	font-weight: bolder;
+	margin-top: 600px;
+	right: 400px;
+	color: rgb(89, 187, 190);
+}
+
+#angelPlace
+{
+	position: absolute;
+	display: inline-block;
+	right: 430px;
+	margin-top: 160px;
+}
+
+#angel
+{
+	position: absolute;
+}
+
+.cloud_bubble
+{
+	position: absolute;
+	width: 200px;
+	z-index: 2;
+	left: -200px;
+	top: -50px;
+}
+
+#angel_text
+{
+	font-size: 12px;
+	position: absolute;
+	z-index: 3;
+	left: -170px;
+}
+
+.heavenlyPlace
+{
+	position: relative;
+	display: flex;
+	margin: auto;
+	margin-left: 15%;
+	margin-top: 350px;
+	margin-bottom: 100px;
+}
+
+#Go_here_hc
+{
+	position: absolute;
+	z-index: 3;
+	top: 550px;
+	left: 600px;
+	font-weight: bolder;
+	text-decoration: none;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	font-size: 25px;
+	color: rgb(89, 187, 190);
+}
+
+#Go_here_hc:hover, #Go_here_sp:hover, .Go_here
+{
+	color: rgb(64, 114, 114);
+}
+
+#Go_here_hc:active, #Go_here_sp:active, .Go_here:active
+{
+	color: black;
+}

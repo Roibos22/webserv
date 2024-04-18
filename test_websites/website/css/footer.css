@@ -1,0 +1,36 @@
+#bottom
+{
+	background-color: rgb(5, 42, 114);
+	display: flex;
+	position: static;
+	bottom: 0;
+	width: 100%;
+}
+
+#social_links
+{
+	position: relative;
+	margin-left: 2%;
+	padding: 20px 0;
+	display: flex;
+}
+
+#instagram
+{
+	width: 50px;
+}
+
+#facebook
+{
+	width: 50px;
+}
+
+#Contact
+{
+	display: flex;
+	text-align: center;
+	margin: 0;
+	margin-top: 30px;
+	color: rgb(213, 210, 226);
+	font-size: 20px;
+}

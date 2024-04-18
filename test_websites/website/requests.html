@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Upload & Management</title>
+<style>
+	body { font-family: Arial, sans-serif; }
+	ul { list-style-type: none; padding: 0; }
+	li { margin-top: 5px; }
+	.button { margin-top: 10px; }
+	.delete-button { margin-left: 10px; }
+</style>
+</head>
+<body onLoad="updateFileList()">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+<h2>Test Requests</h2>
+<form id="postRequestForm" method="post" enctype="multipart/form-data">
+	<text>var1: </text>
+		<input type="text" id="var1" name="var1">
+	<br>
+	<text>var2: </text>
+		<input type="text" id="var2" name="var2">
+	<br>
+</form>
+<button type="button" class="button" onclick="sendPostRequest()">POST</button>
+<div id="responsePostRequest">
+	<h3>Result:</h3>
+</div>
+
+<hr>
+
+<button type="button" class="button" onclick="sendDeleteRequest()">DELETE</button>
+
+<!-- <div id="fileList">
+	
+</div> -->
+<br><br>
+
+<form id="deleteRequestForm" method="delete" enctype="multipart/form-data">
+	<text>path: </text>
+		<input type="text" id="fileToDelete" name="fileToDelete">
+</form>
+<div id="responseDeleteRequest">
+	<h3>Result:</h3>
+</div>
+
+<hr>
+
+<button type="button" class="button" onclick="sendInfiniteLoopRequest()">Infinite Loop</button>
+
+<script>
+
+function sendDeleteRequest() {
+	var	xhr = new XMLHttpRequest();
+	var filepath = document.getElementById('fileToDelete');
+	//var uri = encodeURIComponent(filepath.value);
+	var uri = filepath.value;
+	console.log('Trying to delete', uri);
+
+	xhr.open('DELETE', window.location.origin + "/" + uri, true);
+	xhr.onload = function() {
+		if (xhr.status >= 200 && xhr.status < 300)
+			console.log('File deleted!\n', xhr.responseText);
+		else
+		{
+			//window.location.href = 'pages/401.html';
+			console.error('File could not be deleted!\n');
+		}
+		document.getElementById('responseDeleteRequest').innerHTML = "<h3>Result: " + xhr.status + ' ' + xhr.statusText + "</h3>";
+		//updateFileList();
+	}
+	xhr.send();
+}
+
+function sendPostRequest() {
+	var var1 = document.getElementById('var1');
+	var var2 = document.getElementById('var2');
+	var var1String = encodeURIComponent(var1.value);
+	var queryString = '?' + 'var1=' + encodeURIComponent(var1.value) + '&' + 'var2=' + encodeURIComponent(var2.value);
+	var xhr = new XMLHttpRequest();
+	var uri = 'requests.html' + queryString;
+
+	xhr.open('POST', uri, true); // Replace 'your-endpoint-url' with the URL you want to send the POST request to
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+	xhr.onload = function () {
+		// Check if the request was successful
+		if (xhr.status >= 200 && xhr.status < 300) {
+			// Handle success - perhaps updating the UI to reflect that the POST was successful
+			console.log('Success:', xhr.responseText);
+			document.getElementById('responsePostRequest').innerHTML = xhr.responseText;
+		} else {
+			console.error('The request failed!');
+			//document.getElementById('response').innerHTML = 'Error1';
+		}
+	};
+
+	xhr.onerror = function () {
+		//document.getElementById('response').innerHTML = 'Error2';
+		console.error('Network Error');
+	};
+	xhr.send(queryString);
+}
+
+	function fileDeleteButtonPressed(filename) {
+		var	xhr = new XMLHttpRequest();
+		var	payload = 'filename=' + filename + '&' + 'mode=2';
+
+		xhr.open('DELETE', 'delete_file', true);
+		xhr.onload = function() {
+			if (xhr.status >= 200 && xhr.status < 300)
+				console.log('File deleted!\n', xhr.responseText);
+			else
+				console.error('File could not be deleted!\n');
+			updateFileList();
+		}
+		xhr.send(payload);
+	}
+
+	function updateFileList() {
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/list_files.py', true);
+		xhr.onload = function () {
+			if (xhr.status >= 200 && xhr.status < 300)
+				document.getElementById('fileList').innerHTML = xhr.responseText;
+			else
+				document.getElementById('fileList').innerHTML = '<p>Error loading file list.</p>';
+		};
+		xhr.onerror = function () {
+			document.getElementById('fileList').innerHTML = '<p>Network error.</p>';
+		};
+		xhr.send();
+	}
+
+	function sendInfiniteLoopRequest() {
+		var	xhr = new XMLHttpRequest();
+
+		xhr.open('GET', "infinite_loop.py", true);
+		xhr.onload = function() { }
+		xhr.send();
+	}
+</script>
+</body>
+</html>

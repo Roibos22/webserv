@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>The best website</title>
+	<link rel="stylesheet" href="../css/styles.css">
+	<link rel="stylesheet" href="../css/adventure.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<body>
+	<section class="header-section">
+		<div id="header-placeholder"></div>
+		<script>
+			$(function()
+			{
+				$.get("header.html", function(data)
+				{
+					$("#header-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+	<section id="Bob_text">
+		<img class="Bob" id="Bob2" src="../img/Bob.gif" alt="Bob2">
+		<img class="Bubble" id="Bubble2" src="../img/Speech_Bubble.png" alt="Bubble2">
+		<p id="bubble_text">I'm glad you followed me "userName".<br>
+		<br>
+		The wozMachine is somewhere here but<br>
+		I'm not sure where<br>
+		Only you can find it and I know you will<br>
+		But remember that when given the choice<br>
+		you must chose the wise wizard Wizzy!<br>
+		or else the monster of the Waz<br>
+		will come to get you!<br>
+		Good luck for your future adventures.</p>
+	</section>
+	<div id="angelPlace">
+		<img class="cloud_bubble" src="../img/cloud_speech_bubble.png" alt="Bubble2">
+		<img id="angel" src="../img/angel.gif" style="height: 300px; border-radius: 180px;" alt="angel">
+		<p id="angel_text">You will find the wozMachine<br>in the heavenly castle</p>
+	</div>
+	<div class="Place">
+		<img id="hauntedPlace" src="../img/haunted_place.gif" alt="hauntedPlace">
+		<a class="allGoHere" id="Go_here_hp" href="../html/scare.html">Go here</a>
+		<img id="hauntedPlace" src="../img/haunted_sp.jpg" alt="hauntedPlace">
+		<a class="allGoHere" id="Go_here_sp" href="../html/scare_sp.html">Go here</a>
+	</div>
+	<div class="heavenlyPlace">
+		<img id="heavenlyCastle" style="border-radius: 50%;" src="../img/heavenly_castle.gif" alt="heavenCastle">
+		<a class="allGoHere" id="Go_here_hc" href="../html/wozMachine.html">Go here</a>
+	</div>
+	<section class="footer-section">
+		<div id="footer-placeholder"></div>
+		<script>
+			$(function()
+			{
+				$.get("footer.html", function(data)
+				{
+					$("#footer-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+</body>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGI Tester</title>
+</head>
+<body>
+    <h1>CGI Tester</h1>
+	<h2>PHP CGI, mehtod GET</h2>
+    <p>Enter two numbers to add them together.</p>
+    <form action="/cgi-bin/ar.php" method="get">
+        <label for="num1">Number 1:</label><br>
+        <input type="number" id="num1" name="num1"><br>
+        <label for="num2">Number 2:</label><br>
+        <input type="number" id="num2" name="num2"><br>
+        <input type="submit" value="Submit">
+    </form>
+	<h2>Python CGI, mehtod GET</h2>
+	<p>Enter your name:</p>
+    <form action="/python/python1.py" method="get">
+        <label for="char">Name:</label><br>
+        <input type="text" id="char" name="char"><br>
+        <input type="submit" value="Submit">
+    </form>
+	<h2>PHP CGI, mehtod POST</h2>
+	<p>Enter a sentence to turn in to uppercase.</p>
+    <form action="/cgi-bin/test.php" method="post">
+        <label for="char">Sentence:</label><br>
+        <input type="text" id="char" name="char" maxlength="500" ><br>
+        <input type="submit" value="Submit">
+    </form>
+	<h2>PHP CGI, mehtod GET</h2>
+    <p>Enter a character and size to create an ASCII tree.</p>
+    <form action="/cgi-bin/tree.php" method="get">
+        <label for="char">Character:</label><br>
+        <input type="text" id="char" name="char" maxlength="1"><br>
+		<label for="size">size:</label><br>
+        <input type="number" id="size" name="size"><br>
+        <input type="submit" value="Submit">
+    </form>
+	<h2>PHP CGI, Invalid script</h2>
+	<p>Corrupted Script with infinite loop.</p>
+    <form action="/cgi-bin/infinite_loop.php" method="get">
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+

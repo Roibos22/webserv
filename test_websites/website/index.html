@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>The best website</title>
+	<link rel="stylesheet" href="../css/styles.css">
+	<link rel="stylesheet" href="../css/index.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<body>
+	<section class="header-section">
+		<div id="header-placeholder"></div>
+		<script>
+			$(function()
+			{
+				$.get("header.html", function(data)
+				{
+					$("#header-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+	<div class="parent" id="par1">
+		<img class="Bob" id="Bob1" src="../img/Bob.gif" alt="Bob1">
+		<img class="Bubble" id="Bubble1" src="../img/Speech_Bubble.png" alt="Bubble1">
+		<p class="Text" id="p1">Yo! Hey!<br>
+		Listen to me!<br>
+		I've been looking for you you're the chose one to the wozMachine!<br>
+		What is the wozMachine you may ask?!<br>
+		Well the wozMachine is ancient machine that will allow the chose one<br>
+		to upload an image to a website and then delete it!<br>
+		Sounds fascinating right?! You wonder where it is?!<br>
+		Well, I'm here to help you find it!<br>
+		But you are going to have to trust me and only me, no one else!<br>
+		For now, start by clicking on the Action section of the navigation bar!<br>
+		This will bring you to the secret place where the wozMachine is hiding, and<br>
+		then you'll finally be able to do what you've been sent for!<br>
+		Oh and sorry, I forgot to mention, I'm Bob btw.<br>
+		What about you, what's your name ?</p>
+		<form id="getName">
+			<label for="userInput">getUserName(</label>
+			<input type="text" id="userInput" name="userInput">
+			<label>)</label>
+			<button type="button" onclick="saveName()">submit</button>
+			<br><br>
+			<div id="nameSaveResult">
+				<!-- The file list will be populated here -->
+			</div>
+		</form>
+	</div>
+	<div class="parent" id="par2">
+		<img id="iago" src="../img/iago.jpg" alt="iago">
+		<img class="Bubble" id="Bubble2" src="../img/Speech_Bubble.png" alt="Bubble2">
+		<p class="Text" id="iago_text">I know a shortcut<br> to the wazMachine,<br>
+			just <a href="../html/scare.html">click here</a></p>
+	</div>
+	<section class="footer-section">
+		<div id="footer-placeholder"></div>
+		<script>
+			
+			function saveName() {
+				var nameElement = document.getElementById('userInput'); // Corrected form ID
+				var name = encodeURIComponent(nameElement.value);
+				var xhr = new XMLHttpRequest();
+
+				xhr.open('POST', '/internal-cgi/save_name.py' + '?name=' + name, true);
+				xhr.onload = function() {
+					if (xhr.status >= 200 && xhr.status < 300)
+					{
+						document.getElementById('nameSaveResult').innerHTML = xhr.responseText;
+						console.log('Name saved!\n', xhr.responseText);
+					}
+					else
+						console.error('Name could not be saved!\n');
+				}
+				xhr.send('/internal-cgi/save_name.py' + '?name=' + name);
+			}
+
+			$(function()
+			{
+				$.get("footer.html", function(data)
+				{
+					$("#footer-placeholder").html(data);
+				});
+			});
+		</script>
+	</section>
+</body>
